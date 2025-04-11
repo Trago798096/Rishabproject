@@ -607,13 +607,13 @@ export async function seedInitialData() {
     
     // Create admin user if it doesn't exist
     console.log('Creating admin user...');
-    const existingAdmin = await storage.getAdminUserByUsername('admin');
+    const existingAdmin = await storage.getAdminUserByUsername('sanyamgulathi1@gmail.com');
     
     if (!existingAdmin) {
       await storage.createAdminUser({
-        username: 'admin',
-        password: 'admin123', // This will be hashed by the storage method
-        name: 'Admin User'
+        username: 'sanyamgulathi1@gmail.com',
+        password: '798096', // This will be hashed by the storage method
+        name: 'Sanyam Gulathi'
       });
     }
     
