@@ -403,4 +403,199 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Import the Supabase storage implementation
+import { SupabaseStorage } from "./supabase-storage";
+
+// Use Supabase storage implementation
+import { db } from "./db";
+import { eq, and, desc, SQL } from "drizzle-orm";
+import { compare, hash } from "bcryptjs";
+import { 
+  adminUsers, 
+  matches, 
+  ticketTypes, 
+  bookings, 
+  upiDetails 
+} from "@shared/schema";
+
+class DatabaseStorage implements IStorage {
+  // Admin Users
+  async getAdminUserByUsername(username: string): Promise<AdminUser | undefined> {
+    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.username, username));
+    return user;
+  }
+
+  async createAdminUser(user: InsertAdminUser): Promise<AdminUser> {
+    // Hash the password before saving
+    const hashedPassword = await hash(user.password, 10);
+    const [newUser] = await db.insert(adminUsers)
+      .values({ ...user, password: hashedPassword })
+      .returning();
+    return newUser;
+  }
+
+  async validateAdminLogin(credentials: LoginCredentials): Promise<AdminUser | null> {
+    const user = await this.getAdminUserByUsername(credentials.username);
+    if (!user) return null;
+    
+    const isValidPassword = await compare(credentials.password, user.password);
+    return isValidPassword ? user : null;
+  }
+
+  // Matches
+  async getMatches(active?: boolean): Promise<Match[]> {
+    let query = db.select().from(matches);
+    
+    if (active !== undefined) {
+      query = query.where(eq(matches.isActive, active));
+    }
+    
+    return await query.orderBy(desc(matches.date));
+  }
+
+  async getMatchById(id: number): Promise<Match | undefined> {
+    const [match] = await db.select().from(matches).where(eq(matches.id, id));
+    return match;
+  }
+
+  async createMatch(match: InsertMatch): Promise<Match> {
+    const [newMatch] = await db.insert(matches)
+      .values(match)
+      .returning();
+    return newMatch;
+  }
+
+  async updateMatch(id: number, match: Partial<InsertMatch>): Promise<Match | undefined> {
+    const [updatedMatch] = await db.update(matches)
+      .set(match)
+      .where(eq(matches.id, id))
+      .returning();
+    return updatedMatch;
+  }
+
+  async deleteMatch(id: number): Promise<boolean> {
+    const result = await db.delete(matches).where(eq(matches.id, id));
+    return true; // Drizzle doesn't return affected rows count directly
+  }
+
+  // Ticket Types
+  async getTicketTypesByMatchId(matchId: number): Promise<TicketType[]> {
+    return await db.select().from(ticketTypes).where(eq(ticketTypes.matchId, matchId));
+  }
+
+  async getTicketTypeById(id: number): Promise<TicketType | undefined> {
+    const [ticketType] = await db.select().from(ticketTypes).where(eq(ticketTypes.id, id));
+    return ticketType;
+  }
+
+  async createTicketType(ticketType: InsertTicketType): Promise<TicketType> {
+    const [newTicketType] = await db.insert(ticketTypes)
+      .values(ticketType)
+      .returning();
+    return newTicketType;
+  }
+
+  async updateTicketType(id: number, ticketType: Partial<InsertTicketType>): Promise<TicketType | undefined> {
+    const [updatedTicketType] = await db.update(ticketTypes)
+      .set(ticketType)
+      .where(eq(ticketTypes.id, id))
+      .returning();
+    return updatedTicketType;
+  }
+
+  async updateTicketTypeAvailability(id: number, quantity: number): Promise<TicketType | undefined> {
+    const ticketType = await this.getTicketTypeById(id);
+    if (!ticketType) return undefined;
+    
+    const newAvailableSeats = Math.max(0, ticketType.availableSeats - quantity);
+    
+    const [updatedTicketType] = await db.update(ticketTypes)
+      .set({ availableSeats: newAvailableSeats })
+      .where(eq(ticketTypes.id, id))
+      .returning();
+    
+    return updatedTicketType;
+  }
+
+  async deleteTicketType(id: number): Promise<boolean> {
+    await db.delete(ticketTypes).where(eq(ticketTypes.id, id));
+    return true;
+  }
+
+  // Bookings
+  async getBookings(): Promise<Booking[]> {
+    return await db.select().from(bookings).orderBy(desc(bookings.createdAt));
+  }
+
+  async getBookingByBookingId(bookingId: string): Promise<Booking | undefined> {
+    const [booking] = await db.select().from(bookings).where(eq(bookings.bookingId, bookingId));
+    return booking;
+  }
+
+  async getBookingsByEmail(email: string): Promise<Booking[]> {
+    return await db.select().from(bookings).where(eq(bookings.email, email));
+  }
+
+  async createBooking(booking: InsertBooking): Promise<Booking> {
+    const [newBooking] = await db.insert(bookings)
+      .values(booking)
+      .returning();
+    
+    // Update ticket availability
+    await this.updateTicketTypeAvailability(booking.ticketTypeId, booking.quantity);
+    
+    return newBooking;
+  }
+
+  async updateBookingStatus(bookingId: string, status: string): Promise<Booking | undefined> {
+    const [updatedBooking] = await db.update(bookings)
+      .set({ status })
+      .where(eq(bookings.bookingId, bookingId))
+      .returning();
+    return updatedBooking;
+  }
+
+  async updateBookingPayment(bookingId: string, paymentMethod: string, utrNumber: string): Promise<Booking | undefined> {
+    const [updatedBooking] = await db.update(bookings)
+      .set({ paymentMethod, utrNumber })
+      .where(eq(bookings.bookingId, bookingId))
+      .returning();
+    return updatedBooking;
+  }
+
+  // UPI Details
+  async getActiveUpiDetail(): Promise<UpiDetail | undefined> {
+    const [upiDetail] = await db.select().from(upiDetails).where(eq(upiDetails.isActive, true));
+    return upiDetail;
+  }
+
+  async createUpiDetail(upiDetail: InsertUpiDetail): Promise<UpiDetail> {
+    // If this is set as active, deactivate all others
+    if (upiDetail.isActive) {
+      await db.update(upiDetails).set({ isActive: false });
+    }
+    
+    const [newUpiDetail] = await db.insert(upiDetails)
+      .values(upiDetail)
+      .returning();
+    return newUpiDetail;
+  }
+
+  async updateUpiDetail(id: number, upiDetail: Partial<InsertUpiDetail>): Promise<UpiDetail | undefined> {
+    // If this is set as active, deactivate all others
+    if (upiDetail.isActive) {
+      await db.update(upiDetails)
+        .set({ isActive: false })
+        .where(eq(upiDetails.id, id).not());
+    }
+    
+    const [updatedUpiDetail] = await db.update(upiDetails)
+      .set(upiDetail)
+      .where(eq(upiDetails.id, id))
+      .returning();
+    return updatedUpiDetail;
+  }
+}
+
+// Switch to Database Storage
+export const storage = new DatabaseStorage();

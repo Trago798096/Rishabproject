@@ -3,8 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertBookingSchema, insertMatchSchema, insertTicketTypeSchema, insertUpiDetailSchema, loginSchema } from "@shared/schema";
+import sqlRouter from "./routes/sql";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register SQL route
+  app.use('/api', sqlRouter);
+  
   // API routes
   
   // Get all matches
@@ -16,7 +20,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const matches = await storage.getMatches(isActive);
       res.json(matches);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch matches" });
+      console.error("Error fetching matches:", error);
+      res.status(500).json({ message: "Failed to fetch matches", error: error.message });
     }
   });
 
