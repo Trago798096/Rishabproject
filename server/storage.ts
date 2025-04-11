@@ -586,7 +586,7 @@ class DatabaseStorage implements IStorage {
     if (upiDetail.isActive) {
       await db.update(upiDetails)
         .set({ isActive: false })
-        .where(eq(upiDetails.id, id).not());
+        .where(eq(upiDetails.isActive, true));
     }
     
     const [updatedUpiDetail] = await db.update(upiDetails)
@@ -599,3 +599,191 @@ class DatabaseStorage implements IStorage {
 
 // Switch to Database Storage
 export const storage = new DatabaseStorage();
+
+// Seed initial data
+export async function seedInitialData() {
+  try {
+    console.log('Starting to seed initial data with Drizzle...');
+    
+    // Create admin user if it doesn't exist
+    console.log('Creating admin user...');
+    const existingAdmin = await storage.getAdminUserByUsername('admin');
+    
+    if (!existingAdmin) {
+      await storage.createAdminUser({
+        username: 'admin',
+        password: 'admin123', // This will be hashed by the storage method
+        name: 'Admin User'
+      });
+    }
+    
+    // Create UPI details if they don't exist
+    console.log('Creating UPI details...');
+    const existingUpi = await storage.getActiveUpiDetail();
+    
+    if (!existingUpi) {
+      await storage.createUpiDetail({
+        upiId: 'ipltickets@ybl',
+        qrCode: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg',
+        isActive: true
+      });
+    }
+    
+    // Create sample matches if they don't exist
+    console.log('Creating sample matches...');
+    const matches = await storage.getMatches();
+    
+    if (matches.length === 0) {
+      // Match 1: RCB vs DC
+      const match1 = await storage.createMatch({
+        team1: "Royal Challengers Bengaluru",
+        team2: "Delhi Capitals",
+        team1Logo: "https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/RCB/Logos/Roundbig/RCBroundbig.png",
+        team2Logo: "https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/DC/Logos/Roundbig/DCroundbig.png",
+        venue: "M. Chinnaswamy Stadium, Bengaluru, Karnataka",
+        stadium: "M. Chinnaswamy Stadium",
+        date: "10 April 2025",
+        time: "7:30 PM IST",
+        isActive: true
+      });
+      
+      // Match 2: CSK vs KKR
+      const match2 = await storage.createMatch({
+        team1: "Chennai Super Kings",
+        team2: "Kolkata Knight Riders",
+        team1Logo: "https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/CSK/logos/Roundbig/CSKroundbig.png",
+        team2Logo: "https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/KKR/Logos/Roundbig/KKRroundbig.png",
+        venue: "M.A. Chidambaram Stadium, Chennai, Tamil Nadu",
+        stadium: "M.A. Chidambaram Stadium",
+        date: "11 April 2025",
+        time: "7:30 PM IST",
+        isActive: true
+      });
+      
+      // Match 3: LSG vs GT
+      const match3 = await storage.createMatch({
+        team1: "Lucknow Super Giants",
+        team2: "Gujarat Titans",
+        team1Logo: "https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/LSG/Logos/Roundbig/LSGroundbig.png",
+        team2Logo: "https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/GT/Logos/Roundbig/GTroundbig.png",
+        venue: "BRSABV Ekana Cricket Stadium, Lucknow",
+        stadium: "BRSABV Ekana Cricket Stadium",
+        date: "12 April 2025",
+        time: "3:30 PM IST",
+        isActive: true
+      });
+      
+      // Match 4: SRH vs PBKS
+      const match4 = await storage.createMatch({
+        team1: "Sunrisers Hyderabad",
+        team2: "Punjab Kings",
+        team1Logo: "https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/SRH/Logos/Roundbig/SRHroundbig.png",
+        team2Logo: "https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/PBKS/Logos/Roundbig/PBKSroundbig.png",
+        venue: "Rajiv Gandhi International Cricket Stadium, Hyderabad",
+        stadium: "Rajiv Gandhi International Cricket Stadium",
+        date: "12 April 2025",
+        time: "7:30 PM IST",
+        isActive: true
+      });
+      
+      // Create ticket types for Match 1
+      console.log('Creating ticket types for matches...');
+      await storage.createTicketType({
+        matchId: match1.id,
+        name: "General Stand",
+        description: "Affordable seating, usually in the upper stands.",
+        price: 999,
+        totalSeats: 1000,
+        availableSeats: 850
+      });
+      
+      await storage.createTicketType({
+        matchId: match1.id,
+        name: "Premium Stand",
+        description: "Better view and closer to the action.",
+        price: 1990,
+        totalSeats: 500,
+        availableSeats: 420
+      });
+      
+      await storage.createTicketType({
+        matchId: match1.id,
+        name: "Pavilion Stand",
+        description: "Premium seating with excellent view.",
+        price: 2999,
+        totalSeats: 300,
+        availableSeats: 250
+      });
+      
+      await storage.createTicketType({
+        matchId: match1.id,
+        name: "VIP Stand",
+        description: "Exclusive seating with food and drinks.",
+        price: 5000,
+        totalSeats: 100,
+        availableSeats: 75
+      });
+      
+      // Create ticket types for Match 2
+      await storage.createTicketType({
+        matchId: match2.id,
+        name: "General Stand",
+        description: "Affordable seating, usually in the upper stands.",
+        price: 999,
+        totalSeats: 1000,
+        availableSeats: 830
+      });
+      
+      await storage.createTicketType({
+        matchId: match2.id,
+        name: "Premium Stand",
+        description: "Better view and closer to the action.",
+        price: 1990,
+        totalSeats: 500,
+        availableSeats: 450
+      });
+      
+      // Create ticket types for Match 3
+      await storage.createTicketType({
+        matchId: match3.id,
+        name: "General Stand",
+        description: "Affordable seating, usually in the upper stands.",
+        price: 999,
+        totalSeats: 1000,
+        availableSeats: 900
+      });
+      
+      await storage.createTicketType({
+        matchId: match3.id,
+        name: "Premium Stand",
+        description: "Better view and closer to the action.",
+        price: 2000,
+        totalSeats: 500,
+        availableSeats: 400
+      });
+      
+      // Create ticket types for Match 4
+      await storage.createTicketType({
+        matchId: match4.id,
+        name: "General Stand",
+        description: "Affordable seating, usually in the upper stands.",
+        price: 999,
+        totalSeats: 1000,
+        availableSeats: 800
+      });
+      
+      await storage.createTicketType({
+        matchId: match4.id,
+        name: "Premium Stand",
+        description: "Better view and closer to the action.",
+        price: 1990,
+        totalSeats: 500,
+        availableSeats: 400
+      });
+    }
+    
+    console.log('Initial data seeding with Drizzle completed.');
+  } catch (error) {
+    console.error('Error seeding initial data with Drizzle:', error);
+  }
+}
