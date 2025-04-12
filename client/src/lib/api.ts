@@ -1,5 +1,7 @@
 import { apiRequest } from './queryClient';
 import { Match, TicketType, Booking, UPIDetails, Admin } from "@shared/schema";
+import type { Match as MatchType, Booking as BookingType, TicketType as TicketTypeType, UPIDetail } from '@shared/schema';
+
 
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
@@ -112,26 +114,32 @@ export const authApi = {
 };
 
 // Export direct fetch functions for compatibility
-export async function fetchMatches(): Promise<Match[]> {
-  return matchesApi.getAll();
+export async function fetchMatches(): Promise<MatchType[]> {
+  const response = await fetch('/api/matches');
+  if (!response.ok) throw new Error('Failed to fetch matches');
+  return response.json();
 }
 
-export async function fetchMatch(id: number): Promise<Match> {
-  return matchesApi.getById(id);
+export async function fetchMatchById(id: number): Promise<MatchType> {
+  const response = await fetch(`/api/matches/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch match');
+  return response.json();
 }
 
-export async function fetchTicketTypes(matchId: number): Promise<TicketType[]> {
-  return matchesApi.getTicketTypes(matchId);
+export async function fetchBookingByBookingId(id: string): Promise<BookingType> {
+  const response = await fetch(`/api/bookings/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch booking');
+  return response.json();
 }
 
-export async function createBooking(data: Partial<Booking>): Promise<Booking> {
-  return bookingsApi.create(data);
+export async function fetchTicketTypeById(id: number): Promise<TicketTypeType> {
+  const response = await fetch(`/api/ticket-types/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch ticket type');
+  return response.json();
 }
 
-export async function getUPIDetails(): Promise<UPIDetails> {
-  return upiDetailsApi.getActive();
-}
-
-export async function adminLogin(username: string, password: string): Promise<Admin> {
-  return authApi.login({ username, password });
+export async function fetchUPIDetails(): Promise<UPIDetail[]> {
+  const response = await fetch('/api/upi-details');
+  if (!response.ok) throw new Error('Failed to fetch UPI details');
+  return response.json();
 }
