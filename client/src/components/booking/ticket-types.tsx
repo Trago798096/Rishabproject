@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchTicketTypesByMatchId } from "@/lib/api";
+import { matchesApi } from "@/lib/api";
 import { TicketType } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ export default function TicketTypes({ matchId }: TicketTypesProps) {
   
   const { data: ticketTypes, isLoading, isError } = useQuery<TicketType[]>({
     queryKey: [`/api/matches/${matchId}/tickets`],
-    queryFn: () => fetchTicketTypesByMatchId(matchId),
+    queryFn: () => matchesApi.getTicketTypes(matchId),
   });
 
   const selectedTicketType = selectedTicketTypeId 
