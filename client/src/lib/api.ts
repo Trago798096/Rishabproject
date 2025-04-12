@@ -1,4 +1,5 @@
 import { apiRequest } from './queryClient';
+import { Match, TicketType, Booking, UPIDetails, Admin } from "@shared/schema";
 
 // Base URL will be the same domain in production, but we need to specify it for development
 const getBaseUrl = () => {
@@ -20,27 +21,22 @@ export const matchesApi = {
     const res = await apiRequest('GET', url);
     return res.json();
   },
-  
   getById: async (id: number) => {
     const res = await apiRequest('GET', `/api/matches/${id}`);
     return res.json();
   },
-  
   getTicketTypes: async (matchId: number) => {
     const res = await apiRequest('GET', `/api/matches/${matchId}/tickets`);
     return res.json();
   },
-  
   create: async (matchData: any) => {
     const res = await apiRequest('POST', '/api/admin/matches', matchData);
     return res.json();
   },
-  
   update: async (id: number, matchData: any) => {
     const res = await apiRequest('PATCH', `/api/admin/matches/${id}`, matchData);
     return res.json();
   },
-  
   delete: async (id: number) => {
     await apiRequest('DELETE', `/api/admin/matches/${id}`);
     return true;
@@ -53,17 +49,14 @@ export const ticketTypesApi = {
     const res = await apiRequest('GET', `/api/ticket-types/${id}`);
     return res.json();
   },
-  
   create: async (ticketTypeData: any) => {
     const res = await apiRequest('POST', '/api/admin/ticket-types', ticketTypeData);
     return res.json();
   },
-  
   update: async (id: number, ticketTypeData: any) => {
     const res = await apiRequest('PATCH', `/api/admin/ticket-types/${id}`, ticketTypeData);
     return res.json();
   },
-  
   delete: async (id: number) => {
     await apiRequest('DELETE', `/api/admin/ticket-types/${id}`);
     return true;
@@ -76,27 +69,22 @@ export const bookingsApi = {
     const res = await apiRequest('POST', '/api/bookings', bookingData);
     return res.json();
   },
-  
   updatePayment: async (bookingId: string, paymentData: any) => {
     const res = await apiRequest('PATCH', `/api/bookings/${bookingId}/payment`, paymentData);
     return res.json();
   },
-  
   getByEmail: async (email: string) => {
     const res = await apiRequest('GET', `/api/bookings?email=${encodeURIComponent(email)}`);
     return res.json();
   },
-  
   getByBookingId: async (bookingId: string) => {
     const res = await apiRequest('GET', `/api/bookings/${bookingId}`);
     return res.json();
   },
-  
   getAll: async () => {
     const res = await apiRequest('GET', '/api/admin/bookings');
     return res.json();
   },
-  
   updateStatus: async (bookingId: string, status: string) => {
     const res = await apiRequest('PATCH', `/api/admin/bookings/${bookingId}/status`, { status });
     return res.json();
@@ -109,12 +97,10 @@ export const upiDetailsApi = {
     const res = await apiRequest('GET', '/api/upi-details');
     return res.json();
   },
-  
   create: async (upiDetailData: any) => {
     const res = await apiRequest('POST', '/api/admin/upi-details', upiDetailData);
     return res.json();
   },
-  
   update: async (id: number, upiDetailData: any) => {
     const res = await apiRequest('PATCH', `/api/admin/upi-details/${id}`, upiDetailData);
     return res.json();
@@ -128,3 +114,47 @@ export const authApi = {
     return res.json();
   }
 };
+
+export async function fetchMatches(): Promise<Match[]> {
+  const response = await fetch('/api/matches');
+  if (!response.ok) throw new Error('Failed to fetch matches');
+  return response.json();
+}
+
+export async function fetchMatch(id: number): Promise<Match> {
+  const response = await fetch(`/api/matches/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch match');
+  return response.json();
+}
+
+export async function fetchTicketTypes(matchId: number): Promise<TicketType[]> {
+  const response = await fetch(`/api/matches/${matchId}/ticket-types`);
+  if (!response.ok) throw new Error('Failed to fetch ticket types');
+  return response.json();
+}
+
+export async function createBooking(data: Partial<Booking>): Promise<Booking> {
+  const response = await fetch('/api/bookings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!response.ok) throw new Error('Failed to create booking');
+  return response.json();
+}
+
+export async function getUPIDetails(): Promise<UPIDetails> {
+  const response = await fetch('/api/upi-details');
+  if (!response.ok) throw new Error('Failed to get UPI details');
+  return response.json();
+}
+
+export async function adminLogin(username: string, password: string): Promise<Admin> {
+  const response = await fetch('/api/admin/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
+  if (!response.ok) throw new Error('Login failed');
+  return response.json();
+}
