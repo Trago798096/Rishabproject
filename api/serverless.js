@@ -1,6 +1,6 @@
 // Import the Express app
-import app from './index.js';
-import { withCors } from './middleware.js';
+import app from './index';
+import { withCors } from './middleware';
 
 // Define a handler function for Vercel serverless functions
 async function handler(req, res) {

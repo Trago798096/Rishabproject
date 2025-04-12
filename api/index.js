@@ -2,12 +2,13 @@
 import express from 'express';
 import bodyParser from 'express';
 import cors from 'cors';
+import { z } from 'zod';
 
 // Import routes and storage
-import { storage } from '../server/storage.js';
-import { migrateDatabase, seedInitialData } from '../server/supabase.js';
-import { insertBookingSchema, insertMatchSchema, insertTicketTypeSchema, insertUpiDetailSchema, loginSchema } from '../shared/schema.js';
-import { z } from 'zod';
+// Note: Changing import paths to be compatible with Vercel build system
+import { storage } from '../server/storage';
+import { migrateDatabase, seedInitialData } from '../server/supabase';
+import { insertBookingSchema, insertMatchSchema, insertTicketTypeSchema, insertUpiDetailSchema, loginSchema } from '../shared/schema';
 
 // Initialize database if needed
 async function initializeDatabase() {
