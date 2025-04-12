@@ -14,7 +14,7 @@ interface TicketTypesProps {
 export default function TicketTypes({ matchId }: TicketTypesProps) {
   const [selectedTicketTypeId, setSelectedTicketTypeId] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
-  
+
   const { data: ticketTypes, isLoading, isError } = useQuery<TicketType[]>({
     queryKey: [`/api/matches/${matchId}/tickets`],
     queryFn: () => matchesApi.getTicketTypes(matchId),
@@ -76,7 +76,7 @@ export default function TicketTypes({ matchId }: TicketTypesProps) {
     <div className="p-4">
       <h3 className="text-lg font-medium mb-4">Select a ticket type</h3>
       <p className="text-gray-600 mb-4">Choose from our available ticket categories</p>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {ticketTypes.map((ticket) => (
           <div 
@@ -105,17 +105,17 @@ export default function TicketTypes({ matchId }: TicketTypesProps) {
       {selectedTicketType && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <h4 className="font-medium mb-3">Booking Details</h4>
-          
+
           <div className="flex justify-between items-center mb-3">
             <span>Ticket Type:</span>
             <span className="font-medium">{selectedTicketType.name}</span>
           </div>
-          
+
           <div className="flex justify-between items-center mb-3">
             <span>Price per Ticket:</span>
             <span className="font-medium">{formatCurrency(selectedTicketType.price)}</span>
           </div>
-          
+
           <div className="flex justify-between items-center mb-4">
             <span>Quantity:</span>
             <div className="flex items-center">
@@ -142,12 +142,12 @@ export default function TicketTypes({ matchId }: TicketTypesProps) {
               </Button>
             </div>
           </div>
-          
+
           <div className="flex justify-between items-center font-bold text-lg border-t border-gray-200 pt-3 mb-4">
             <span>Total:</span>
             <span>{formatCurrency(selectedTicketType.price * quantity)}</span>
           </div>
-          
+
           <Link href={`/booking-summary/${selectedTicketType.id}/${quantity}`}>
             <Button className="w-full">Proceed to Booking</Button>
           </Link>

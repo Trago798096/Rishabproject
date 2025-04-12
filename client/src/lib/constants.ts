@@ -40,3 +40,7 @@ export const TEAM_LOGOS = {
   'Gujarat Titans': 'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/GT/Logos/Roundbig/GTroundbig.png',
   'Lucknow Super Giants': 'https://bcciplayerimages.s3.ap-south-1.amazonaws.com/ipl/LSG/Logos/Roundbig/LSGroundbig.png'
 };
+
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+export const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+export const IS_PROD = import.meta.env.PROD;
