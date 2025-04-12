@@ -1,43 +1,39 @@
 import { apiRequest } from './queryClient';
 import { Match, TicketType, Booking, UPIDetails, Admin } from "@shared/schema";
 
-// Base URL will be the same domain in production, but we need to specify it for development
 const getBaseUrl = () => {
-  // Check if we're in a browser environment
   if (typeof window !== 'undefined') {
-    // If in production on Vercel, API calls go to the same domain
     return '';
   }
-  // In development, default to localhost
   return 'http://localhost:5000';
 };
 
 // API client for matches
 export const matchesApi = {
-  getAll: async (active?: boolean) => {
+  getAll: async (active?: boolean): Promise<Match[]> => {
     const url = active !== undefined 
       ? `/api/matches?active=${active}`
       : '/api/matches';
     const res = await apiRequest('GET', url);
     return res.json();
   },
-  getById: async (id: number) => {
+  getById: async (id: number): Promise<Match> => {
     const res = await apiRequest('GET', `/api/matches/${id}`);
     return res.json();
   },
-  getTicketTypes: async (matchId: number) => {
+  getTicketTypes: async (matchId: number): Promise<TicketType[]> => {
     const res = await apiRequest('GET', `/api/matches/${matchId}/tickets`);
     return res.json();
   },
-  create: async (matchData: any) => {
+  create: async (matchData: Partial<Match>): Promise<Match> => {
     const res = await apiRequest('POST', '/api/admin/matches', matchData);
     return res.json();
   },
-  update: async (id: number, matchData: any) => {
+  update: async (id: number, matchData: Partial<Match>): Promise<Match> => {
     const res = await apiRequest('PATCH', `/api/admin/matches/${id}`, matchData);
     return res.json();
   },
-  delete: async (id: number) => {
+  delete: async (id: number): Promise<boolean> => {
     await apiRequest('DELETE', `/api/admin/matches/${id}`);
     return true;
   }
@@ -45,19 +41,19 @@ export const matchesApi = {
 
 // API client for ticket types
 export const ticketTypesApi = {
-  getById: async (id: number) => {
+  getById: async (id: number): Promise<TicketType> => {
     const res = await apiRequest('GET', `/api/ticket-types/${id}`);
     return res.json();
   },
-  create: async (ticketTypeData: any) => {
+  create: async (ticketTypeData: Partial<TicketType>): Promise<TicketType> => {
     const res = await apiRequest('POST', '/api/admin/ticket-types', ticketTypeData);
     return res.json();
   },
-  update: async (id: number, ticketTypeData: any) => {
+  update: async (id: number, ticketTypeData: Partial<TicketType>): Promise<TicketType> => {
     const res = await apiRequest('PATCH', `/api/admin/ticket-types/${id}`, ticketTypeData);
     return res.json();
   },
-  delete: async (id: number) => {
+  delete: async (id: number): Promise<boolean> => {
     await apiRequest('DELETE', `/api/admin/ticket-types/${id}`);
     return true;
   }
@@ -65,27 +61,27 @@ export const ticketTypesApi = {
 
 // API client for bookings
 export const bookingsApi = {
-  create: async (bookingData: any) => {
+  create: async (bookingData: Partial<Booking>): Promise<Booking> => {
     const res = await apiRequest('POST', '/api/bookings', bookingData);
     return res.json();
   },
-  updatePayment: async (bookingId: string, paymentData: any) => {
+  updatePayment: async (bookingId: string, paymentData: any): Promise<Booking> => {
     const res = await apiRequest('PATCH', `/api/bookings/${bookingId}/payment`, paymentData);
     return res.json();
   },
-  getByEmail: async (email: string) => {
+  getByEmail: async (email: string): Promise<Booking[]> => {
     const res = await apiRequest('GET', `/api/bookings?email=${encodeURIComponent(email)}`);
     return res.json();
   },
-  getByBookingId: async (bookingId: string) => {
+  getByBookingId: async (bookingId: string): Promise<Booking> => {
     const res = await apiRequest('GET', `/api/bookings/${bookingId}`);
     return res.json();
   },
-  getAll: async () => {
+  getAll: async (): Promise<Booking[]> => {
     const res = await apiRequest('GET', '/api/admin/bookings');
     return res.json();
   },
-  updateStatus: async (bookingId: string, status: string) => {
+  updateStatus: async (bookingId: string, status: string): Promise<Booking> => {
     const res = await apiRequest('PATCH', `/api/admin/bookings/${bookingId}/status`, { status });
     return res.json();
   }
@@ -93,15 +89,15 @@ export const bookingsApi = {
 
 // API client for UPI details
 export const upiDetailsApi = {
-  getActive: async () => {
+  getActive: async (): Promise<UPIDetails> => {
     const res = await apiRequest('GET', '/api/upi-details');
     return res.json();
   },
-  create: async (upiDetailData: any) => {
+  create: async (upiDetailData: Partial<UPIDetails>): Promise<UPIDetails> => {
     const res = await apiRequest('POST', '/api/admin/upi-details', upiDetailData);
     return res.json();
   },
-  update: async (id: number, upiDetailData: any) => {
+  update: async (id: number, upiDetailData: Partial<UPIDetails>): Promise<UPIDetails> => {
     const res = await apiRequest('PATCH', `/api/admin/upi-details/${id}`, upiDetailData);
     return res.json();
   }
@@ -109,52 +105,33 @@ export const upiDetailsApi = {
 
 // API client for admin authentication
 export const authApi = {
-  login: async (credentials: any) => {
+  login: async (credentials: { username: string, password: string }): Promise<Admin> => {
     const res = await apiRequest('POST', '/api/admin/login', credentials);
     return res.json();
   }
 };
 
+// Export direct fetch functions for compatibility
 export async function fetchMatches(): Promise<Match[]> {
-  const response = await fetch('/api/matches');
-  if (!response.ok) throw new Error('Failed to fetch matches');
-  return response.json();
+  return matchesApi.getAll();
 }
 
 export async function fetchMatch(id: number): Promise<Match> {
-  const response = await fetch(`/api/matches/${id}`);
-  if (!response.ok) throw new Error('Failed to fetch match');
-  return response.json();
+  return matchesApi.getById(id);
 }
 
 export async function fetchTicketTypes(matchId: number): Promise<TicketType[]> {
-  const response = await fetch(`/api/matches/${matchId}/ticket-types`);
-  if (!response.ok) throw new Error('Failed to fetch ticket types');
-  return response.json();
+  return matchesApi.getTicketTypes(matchId);
 }
 
 export async function createBooking(data: Partial<Booking>): Promise<Booking> {
-  const response = await fetch('/api/bookings', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (!response.ok) throw new Error('Failed to create booking');
-  return response.json();
+  return bookingsApi.create(data);
 }
 
 export async function getUPIDetails(): Promise<UPIDetails> {
-  const response = await fetch('/api/upi-details');
-  if (!response.ok) throw new Error('Failed to get UPI details');
-  return response.json();
+  return upiDetailsApi.getActive();
 }
 
 export async function adminLogin(username: string, password: string): Promise<Admin> {
-  const response = await fetch('/api/admin/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
-  });
-  if (!response.ok) throw new Error('Login failed');
-  return response.json();
+  return authApi.login({ username, password });
 }
