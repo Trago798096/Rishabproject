@@ -2,11 +2,16 @@ import { Match, TicketType, Booking, UpiDetails } from "@shared/schema";
 
 const BASE_URL = "/api";
 
+export const fetchMatches = async (activeOnly: boolean = false): Promise<Match[]> => {
+  const url = activeOnly ? `${BASE_URL}/matches?active=true` : `${BASE_URL}/matches`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch matches');
+  return response.json();
+};
+
 class MatchesApi {
   async getMatches(): Promise<Match[]> {
-    const response = await fetch(`${BASE_URL}/matches`);
-    if (!response.ok) throw new Error('Failed to fetch matches');
-    return response.json();
+    return fetchMatches();
   }
 
   async getMatchById(id: number): Promise<Match> {
