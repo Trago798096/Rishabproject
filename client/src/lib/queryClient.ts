@@ -1,5 +1,16 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Helper function to get the base URL for API requests
+const getBaseUrl = () => {
+  // In production (Vercel), API calls will be to the same domain
+  // In development (localhost), specify the port
+  if (typeof window !== 'undefined') {
+    // For browser environments
+    return window.location.origin;
+  }
+  return 'http://localhost:5000'; // Default for SSR context
+};
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -12,11 +23,19 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Ensure the URL is absolute for cross-origin requests
+  const fullUrl = url.startsWith('http') ? url : `${getBaseUrl()}${url}`;
+  
+  const res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      // Add CORS headers for cross-origin requests
+      "Accept": "application/json"
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
+    mode: "cors"
   });
 
   await throwIfResNotOk(res);
@@ -29,8 +48,16 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // Ensure the URL is absolute for cross-origin requests
+    const url = queryKey[0] as string;
+    const fullUrl = url.startsWith('http') ? url : `${getBaseUrl()}${url}`;
+    
+    const res = await fetch(fullUrl, {
       credentials: "include",
+      headers: {
+        "Accept": "application/json"
+      },
+      mode: "cors"
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
@@ -47,11 +74,11 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 60000, // 1 minute instead of Infinity for better refresh
+      retry: 1,
     },
     mutations: {
-      retry: false,
+      retry: 1,
     },
   },
 });

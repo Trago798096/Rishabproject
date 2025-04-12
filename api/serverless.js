@@ -1,8 +1,9 @@
 // Import the Express app
 import app from './index.js';
+import { withCors } from './middleware.js';
 
 // Define a handler function for Vercel serverless functions
-export default async function handler(req, res) {
+async function handler(req, res) {
   // Proxy the request to our Express app
   await new Promise((resolve, reject) => {
     const mockRes = {
@@ -39,7 +40,12 @@ export default async function handler(req, res) {
     try {
       app(req, mockRes);
     } catch (error) {
+      console.error("Server error:", error);
+      res.status(500).json({ error: 'Internal Server Error' });
       reject(error);
     }
   });
 }
+
+// Export the handler with CORS middleware applied
+export default withCors(handler);
