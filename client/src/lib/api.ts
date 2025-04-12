@@ -2,6 +2,21 @@ import { Match, TicketType, Booking, UpiDetails, LoginCredentials } from "@share
 
 const BASE_URL = "/api";
 
+// Create a matchesApi object to match the import
+export const matchesApi = {
+  getMatches: async (): Promise<Match[]> => {
+    const response = await fetch(`${BASE_URL}/matches`);
+    if (!response.ok) throw new Error('Failed to fetch matches');
+    return response.json();
+  },
+
+  getMatchById: async (id: number): Promise<Match> => {
+    const response = await fetch(`${BASE_URL}/matches/${id}`);
+    if (!response.ok) throw new Error(`Failed to fetch match with ID ${id}`);
+    return response.json();
+  }
+};
+
 // Match related functions
 export const fetchMatches = async (activeOnly: boolean = false): Promise<Match[]> => {
   const url = activeOnly ? `${BASE_URL}/matches?active=true` : `${BASE_URL}/matches`;
@@ -10,6 +25,7 @@ export const fetchMatches = async (activeOnly: boolean = false): Promise<Match[]
   return response.json();
 };
 
+// Other existing functions
 export const fetchMatchById = async (id: number): Promise<Match> => {
   const response = await fetch(`${BASE_URL}/matches/${id}`);
   if (!response.ok) throw new Error(`Failed to fetch match with ID ${id}`);
@@ -167,3 +183,5 @@ export const adminDeleteTicketType = async (id: number): Promise<boolean> => {
     if (!response.ok) throw new Error(`Failed to delete ticket type with ID ${id}`);
     return true;
   };
+
+export * from '@shared/schema';
